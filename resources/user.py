@@ -18,15 +18,15 @@ from blocklist import BLOCKLIST
 from libs.mailgun import MailGunException
 from libs.strings import gettext
 
-user_schema = UserCreationSchema()
-user_login_schema = UserSchema()
+user_creation_schema = UserCreationSchema()
+user_schema = UserSchema()
 
 
 class UserRegister(Resource):
     @classmethod
     def post(cls):
         user_json = request.get_json()
-        new_user = user_schema.load(user_json)
+        new_user = user_creation_schema.load(user_json)
 
         if UserModel.find_by_username(new_user.username):
             return {"message": gettext("user_username_exists")}, 400
@@ -53,12 +53,37 @@ class UserRegister(Resource):
             return {"message": gettext("user_error_creating")}, 500
 
 
+class User(Resource):
+    """
+    Only for testing purposes
+    """
+
+    @classmethod
+    def get(cls, user_id: int):
+        user = UserModel.find_by_id(user_id)
+
+        if not user:
+            return {"message": gettext("user_not_found")}, 404
+
+        return user_schema.dump(user), 200
+
+    @classmethod
+    def delete(cls, user_id: int):
+        user = UserModel.find_by_id(user_id)
+
+        if not user:
+            return {"message": gettext("user_not_found")}, 404
+
+        user.delete_from_db()
+        return {"message": gettext("user_deleted")}, 200
+
+
 class UserLogin(Resource):
     @classmethod
     def post(cls):
         user_json = request.get_json()
-        user_data = user_login_schema.load(user_json,
-                                           partial=("email", "first_name", "last_name", "phone_number", "age"))
+        user_data = user_schema.load(user_json,
+                                     partial=("email", "first_name", "last_name", "phone_number", "age"))
 
         user = UserModel.find_by_username(user_data.username)
 
@@ -82,6 +107,15 @@ class UserLogout(Resource):
         return {"message": gettext("user_logged_out").format(user_id)}, 200
 
 
+class TokenRefresh(Resource):
+    @classmethod
+    @jwt_required(refresh=True)
+    def post(cls):
+        current_user = get_jwt_identity()
+        new_token = create_access_token(identity=current_user, fresh=False)
+        return {"access_token": new_token}, 200
+
+
 class PhoneNumber(Resource):
     @classmethod
     @jwt_required(fresh=True)
@@ -102,12 +136,3 @@ class PhoneNumber(Resource):
             return {"message": gettext("phone_number_changed")}, 201
 
         return {"message": gettext("phone_number_error")}, 500
-
-
-class TokenRefresh(Resource):
-    @classmethod
-    @jwt_required(refresh=True)
-    def post(cls):
-        current_user = get_jwt_identity()
-        new_token = create_access_token(identity=current_user, fresh=False)
-        return {"access_token": new_token}, 200

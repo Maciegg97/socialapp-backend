@@ -13,11 +13,6 @@ class UserSchema(ma.SQLAlchemyAutoSchema):
         load_only = ("password",)
         dump_only = ("id", "confirmation", "created_at")
 
-    @pre_dump
-    def _pre_dump(self, user: UserModel, **kwargs):
-        user.confirmation = [user.most_recent_confirmation]
-        return user
-
 
 class UserCreationSchema(Schema):
     username = fields.Str(required=True)
