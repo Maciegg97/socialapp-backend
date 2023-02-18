@@ -44,9 +44,14 @@
   "password_too_short": "Password length must be longer than 8",
   "password_upper_case": "Password must contain upper case",
   "password_lower_case": "Password must contain lower case",
+  "different_passwords": "New passwords does not match",
   "invalid_email_format": "Invalid email format",
+  "wrong_password": "Wrong password",
+  "password_changed": "Password changed successfully",
+  "same_password": "New password is the same as current password",
 
   "phone_number_added": "Phone number was added successfully",
   "phone_number_changed": "Phone number was changed successfully",
-  "phone_number_error": "Error occurred while setting a password"
+  "phone_number_error": "Error occurred while setting a password",
+  "invalid_phone_number_format": "Invalid phone number format"
 }

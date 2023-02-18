@@ -1,8 +1,10 @@
 import traceback
+import re
 
 from flask_restful import Resource
 from flask import request
 from flask_bcrypt import generate_password_hash, check_password_hash
+from marshmallow import ValidationError
 from flask_jwt_extended import (
     create_refresh_token,
     create_access_token,
@@ -13,13 +15,15 @@ from flask_jwt_extended import (
 
 from models.user import UserModel
 from models.confirmation import ConfirmationModel
-from schemas.user import UserCreationSchema, UserSchema
+from schemas.user import UserCreationSchema, UserSchema, UserChangePassword
 from blocklist import BLOCKLIST
 from libs.mailgun import MailGunException
 from libs.strings import gettext
 
 user_creation_schema = UserCreationSchema()
 user_schema = UserSchema()
+user_login_schema = UserSchema(only=("username", "password"))
+user_change_password_schema = UserChangePassword()
 
 
 class UserRegister(Resource):
@@ -82,10 +86,14 @@ class UserLogin(Resource):
     @classmethod
     def post(cls):
         user_json = request.get_json()
-        user_data = user_schema.load(user_json,
-                                     partial=("email", "first_name", "last_name", "phone_number", "age"))
+        # user_data = user_schema.load(user_json,
+        #                              partial=("email", "first_name", "last_name", "phone_number", "age"))
+        user_data = user_login_schema.load(user_json)
 
-        user = UserModel.find_by_username(user_data.username)
+        if UserModel.find_by_username(user_data.username):
+            user = UserModel.find_by_username(user_data.username)
+        else:
+            user = UserModel.find_by_email(user_data.username)
 
         if user and check_password_hash(user.password, user_data.password):
             confirmation = user.most_recent_confirmation
@@ -116,12 +124,43 @@ class TokenRefresh(Resource):
         return {"access_token": new_token}, 200
 
 
+class ChangePassword(Resource):
+    @classmethod
+    @jwt_required(fresh=True)
+    def post(cls):
+        password_json = request.get_json()
+        password_data = user_change_password_schema.load(password_json)
+
+        if password_data['new_password'] != password_data['new_password_2']:
+            return {"message": gettext("different_passwords")}, 400
+
+        if password_data['current_password'] == password_data['new_password']:
+            return {"message": gettext("same_password")}, 400
+
+        user_id = get_jwt_identity()
+        user = UserModel.find_by_id(user_id)
+
+        if not check_password_hash(user.password, password_data['current_password']):
+            return {"message": gettext("wrong_password")}, 401
+
+        user.password = generate_password_hash(password_data['new_password'])
+
+        user.save_to_db()
+
+        return {"message": gettext("password_changed")}, 201
+
+
 class PhoneNumber(Resource):
     @classmethod
     @jwt_required(fresh=True)
     def post(cls):
         phone_data = request.get_json()
+
         new_phone_number = phone_data['phone_number']
+
+        if not re.match("^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{3,7}$", new_phone_number):
+            raise ValidationError(gettext("invalid_phone_number_format"))
+
         user_id = get_jwt_identity()
         user = UserModel.find_by_id(user_id)
 
