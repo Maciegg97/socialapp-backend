@@ -53,5 +53,15 @@
   "phone_number_added": "Phone number was added successfully",
   "phone_number_changed": "Phone number was changed successfully",
   "phone_number_error": "Error occurred while setting a password",
-  "invalid_phone_number_format": "Invalid phone number format"
+  "invalid_phone_number_format": "Invalid phone number format",
+  "same_phone_number": "This number is the same as your current phone number",
+
+  "post_created": "Post successfully created",
+  "post_error_creating": "Internal server error. Failed to create post.",
+  "not_post_owner": "You can only delete your posts",
+  "post_error_deleting": "Internal server error. Failed to delete post.",
+  "post_deleted": "Post deleted successfully.",
+  "post_not_found": "Post with id '{}' was not found",
+  "post_error_update": "Internal server error. Failed to update post.",
+  "post_server_error": "Internal server error. Failed to load posts."
 }

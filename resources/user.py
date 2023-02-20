@@ -1,10 +1,8 @@
 import traceback
-import re
 
 from flask_restful import Resource
 from flask import request
 from flask_bcrypt import generate_password_hash, check_password_hash
-from marshmallow import ValidationError
 from flask_jwt_extended import (
     create_refresh_token,
     create_access_token,
@@ -24,6 +22,7 @@ user_creation_schema = UserCreationSchema()
 user_schema = UserSchema()
 user_login_schema = UserSchema(only=("username", "password"))
 user_change_password_schema = UserChangePassword()
+phone_number_schema = UserCreationSchema(only=("phone_number",))
 
 
 class UserRegister(Resource):
@@ -154,15 +153,16 @@ class PhoneNumber(Resource):
     @classmethod
     @jwt_required(fresh=True)
     def post(cls):
-        phone_data = request.get_json()
+        phone_json = request.get_json()
+        phone_data = phone_number_schema.load(phone_json)
 
-        new_phone_number = phone_data['phone_number']
-
-        if not re.match("^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{3,7}$", new_phone_number):
-            raise ValidationError(gettext("invalid_phone_number_format"))
+        new_phone_number = phone_data.phone_number
 
         user_id = get_jwt_identity()
         user = UserModel.find_by_id(user_id)
+
+        if user.phone_number == new_phone_number:
+            return {"message": gettext("same_phone_number")}, 400
 
         if user and not user.phone_number:
             user.phone_number = new_phone_number

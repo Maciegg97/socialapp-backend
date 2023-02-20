@@ -1,3 +1,5 @@
+import traceback
+
 from datetime import datetime
 from typing import List
 
@@ -5,6 +7,7 @@ from flask import url_for, request
 from requests import Response
 
 from db import db
+from models.user import UserModel
 
 
 class PostModel(db.Model):
@@ -24,11 +27,11 @@ class PostModel(db.Model):
 
     @classmethod
     def find_all(cls) -> List["PostModel"]:
-        return cls.query.all()
+        return cls.query.order_by(db.desc(cls.created_at)).all()
 
     @classmethod
-    def find_all_by_owner(cls, owner_id: int) -> List["PostModel"]:
-        return cls.query.filter_by(owner_id=owner_id).all()
+    def find_all_by_owner_id(cls, owner_id: int) -> List["PostModel"]:
+        return cls.query.filter_by(owner_id=owner_id).order_by(db.desc(cls.created_at)).all()
 
     def save_to_db(self) -> None:
         db.session.add(self)
@@ -37,6 +40,3 @@ class PostModel(db.Model):
     def delete_from_db(self) -> None:
         db.session.delete(self)
         db.session.commit()
-
-
-

@@ -9,6 +9,7 @@ from ma import ma
 from blocklist import BLOCKLIST
 from resources.confirmation import Confirmation
 from resources.user import UserRegister, UserLogin, PhoneNumber, TokenRefresh, UserLogout, User, ChangePassword
+from resources.post import PostCreate, Post, AllPost, AllUserPosts
 
 app = Flask(__name__)
 load_dotenv(".env", verbose=True)
@@ -46,6 +47,11 @@ api.add_resource(UserLogout, "/logout")
 api.add_resource(ChangePassword, "/user/password")
 api.add_resource(PhoneNumber, "/user/number")
 api.add_resource(TokenRefresh, "/refresh")
+
+api.add_resource(PostCreate, "/post/create")
+api.add_resource(Post, "/post/<int:post_id>")
+api.add_resource(AllPost, "/posts")
+api.add_resource(AllUserPosts, "/posts/<string:username>")
 
 if __name__ == "__main__":
     db.init_app(app)
