@@ -5,7 +5,7 @@ from requests import Response
 
 from db import db
 from models.confirmation import ConfirmationModel
-from libs.mailgun import MailGun, MailGunException
+from libs.mailgun import MailGun
 
 
 class UserModel(db.Model):
@@ -22,7 +22,7 @@ class UserModel(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
 
     confirmation = db.relationship(
-        "ConfirmationModel", lazy="dynamic", cascade="all, delete-orphan"
+        "ConfirmationModel", lazy="dynamic", cascade="all, delete-orphan", overlaps="user"
     )
 
     @property
