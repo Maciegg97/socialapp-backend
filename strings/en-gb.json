@@ -63,5 +63,11 @@
   "post_deleted": "Post deleted successfully.",
   "post_not_found": "Post with id '{}' was not found",
   "post_error_update": "Internal server error. Failed to update post.",
-  "post_server_error": "Internal server error. Failed to load posts."
+  "post_server_error": "Internal server error. Failed to load posts.",
+
+  "vote_validation_error": "Validation error {}.",
+  "vote_added": "Vote added successfully.",
+  "post_not_voted": "You cannot unlike post the have not been liked by you.",
+  "vote_deleted": "Vote deleted successfully.",
+  "double_vote": "User with id {} has already voted on post  with id: {}."
 }

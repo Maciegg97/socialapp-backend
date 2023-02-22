@@ -10,6 +10,7 @@ from blocklist import BLOCKLIST
 from resources.confirmation import Confirmation
 from resources.user import UserRegister, UserLogin, PhoneNumber, TokenRefresh, UserLogout, User, ChangePassword
 from resources.post import PostCreate, Post, AllPost, AllUserPosts
+from resources.vote import Vote
 
 app = Flask(__name__)
 load_dotenv(".env", verbose=True)
@@ -52,6 +53,8 @@ api.add_resource(PostCreate, "/post/create")
 api.add_resource(Post, "/post/<int:post_id>")
 api.add_resource(AllPost, "/posts")
 api.add_resource(AllUserPosts, "/posts/<string:username>")
+
+api.add_resource(Vote, "/vote")
 
 if __name__ == "__main__":
     db.init_app(app)
