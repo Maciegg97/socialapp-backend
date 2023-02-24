@@ -16,6 +16,10 @@ class VoteModel(db.Model):
     def find_vote(cls, user_id: int, post_id: int) -> "VoteModel":
         return cls.query.filter_by(user_id=user_id, post_id=post_id).first()
 
+    @classmethod
+    def count_post_votes(cls, _id: int) -> int:
+        return cls.query.filter_by(post_id=_id).count()
+
     def save_to_db(self) -> None:
         db.session.add(self)
         db.session.commit()

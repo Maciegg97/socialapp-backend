@@ -10,6 +10,7 @@ from flask_jwt_extended import (
 
 from models.post import PostModel
 from models.user import UserModel
+from models.vote import VoteModel
 from schemas.post import PostCreateSchema, PostSchema
 from libs.strings import gettext
 
@@ -39,20 +40,28 @@ class PostCreate(Resource):
 class AllPost(Resource):
     @classmethod
     def get(cls):
-        return post_schema.dump(PostModel.find_all(), many=True), 200
+        posts = PostModel.find_all()
+        response = post_schema.dump(posts, many=True)
+        for r in response:
+            r['votes'] = VoteModel.count_post_votes(r['id'])
+        return response, 200
 
 
 class AllUserPosts(Resource):
     @classmethod
     def get(cls, username: str):
-        try:
-            owner = UserModel.find_by_username(username)
-            return post_schema.dump(PostModel.find_all_by_owner_id(owner.id), many=True), 200
-        except AttributeError:
+
+        owner = UserModel.find_by_username(username)
+
+        if not owner:
             return {"message": gettext("user_not_found")}, 404
-        except:
-            traceback.print_exc()
-            return {"message": gettext("post_server_error")}, 500
+
+        response = post_schema.dump(PostModel.find_all_by_owner_id(owner.id), many=True)
+
+        for r in response:
+            r['votes'] = VoteModel.count_post_votes(r['id'])
+
+        return response, 200
 
 
 class Post(Resource):
@@ -64,7 +73,12 @@ class Post(Resource):
         if not post:
             return {"message": gettext("post_not_found").format(post_id)}, 404
 
-        return post_schema.dump(post), 200
+        votes_number = VoteModel.count_post_votes(post_id)
+
+        response = post_schema.dump(post)
+        response['votes'] = votes_number
+
+        return response, 200
 
     @classmethod
     @jwt_required(fresh=True)
